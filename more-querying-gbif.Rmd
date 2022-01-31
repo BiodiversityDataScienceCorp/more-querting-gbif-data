@@ -1,5 +1,96 @@
 ---
-title: "R Notebook"
+title: "More Querying GBIF Data"
 output: pdf_document
 ---
+
+Your name here  
+Assignment 3  
+DSCI 245 / RNR 496B  
+Due: February 8th, 2022  
+
+
+## More Querying GBIF Data
+
+
+### Learning objectives:
+* Understand how to query GBIF data with spocc, using a variety of arguments.
+* Learn how to create a derivative data set with fewer columns.  
+* Learn how to combine data sets.  
+* Succesfully create a csv file from a data set.  
+
+
+
+### Querying data from GBIF with spocc  
+
+Picking up from last week, we're going to dive back into querying data from GBIF (Global Biodversity Information Facility) using the spocc (SPecies OCCurrence) R package. First, let's load the spocc package using the library() function:
+
+
+```{r}
+
+library("spocc")
+
+```
+
+
+Now, let's revisit the "occ()" function. The documenation for this function is available here:
+
+https://docs.ropensci.org/spocc/reference/occ.html
+
+Let's start by revisiting how to run a basic query to get species occurrences from GBIF. The following example will gives us data from GBIF on Southern Black Widows (Latrodectus mactans):
+
+```{r}
+
+blackWidows<-occ(query='Latrodectus mactans', from="gbif", limit=1000)
+
+blackWidows
+
+
+```
+
+One thing we didn't look at last week was the "View()" function. If you recall, occ() returns an "object", which is basically a series of hierarchical data containing various pieces of information. We can navigate the object using the "$" operator, but it's only really useful if we know how to navigate the object. So let's run "View()" on blackWidows, and see what we get:
+
+```{r}
+
+View(blackWidows)
+
+```
+
+You'll notice this opens up a new tab in RStudio, and shows us what's inside the object, and how to navigate it. You can see by clicking the various arrows that we can navigate to the data by this path: blackWidows$gbif$data$ Latrodectus_mactans
+
+```{r}
+
+bwData<-blackWidows$gbif$data$Latrodectus_mactans
+
+bwData
+
+```
+
+
+YOUR TURN:
+
+* Query GBIF using the occ() function for 1000 Monarch butterflies (Danaus plexippus). 
+* Use the View() function to see the object hierarchy.
+* Create a variable to target the dataset from the object, and print it to the screen.
+
+
+```{r}
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+```{r}
+occ_options('gbif')
+```
+
+
 
