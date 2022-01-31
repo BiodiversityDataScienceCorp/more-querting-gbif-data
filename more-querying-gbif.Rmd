@@ -75,22 +75,71 @@ YOUR TURN:
 
 ```{r}
 
+# Create a variable set to the initial occ() query
 
 
+# Use View() to see the object result
+
+
+# Create another variable to target the data set, and then print to screen
 
 
 
 ```
 
 
+### Further refining GBIF queries
+
+The occ() function has many arguments to help refine our query. One particularly useful argument is "gbifopts", which provides a number of additional arguments specific to GBIF queries (remember, occ() can query multiple data sources...each one has their own 'opts' argument). 
 
 
-
-
+We can look at all the possibilities for "gbifopts" by running the following:
 
 ```{r}
 occ_options('gbif')
 ```
+
+You can contain gbifopts in an R "list". The syntax for using a list is:
+
+list(key1="value1", key2="value2")
+
+Below I'm refining the query for the Southern Black Widow to just those in Texas during the year 2020:
+
+```{r}
+
+bwTx<-occ(query="Latrodectus mactans", from="gbif", gbifopts = list(stateProvince="Texas", year="2020"))
+
+bwTx
+
+```
+
+YOUR TURN:
+
+Refine your query to just return Monarch butterflies from Arizona in the years 2020 and 2021 (hint: refer to occ_options('gbif') to determine how to query multiple years):
+
+```{r}
+
+# Run the occ() query
+
+
+# use View() to see the object
+
+
+# Define a new variable, and print to the screen.
+
+
+
+```
+
+
+
+
+### Analyzing your data
+
+
+Looking at the output of the data, it's safe to say that there are many columns that we simply don't need. While they don't hurt anything, it might be easier to work with if we can pare down the size of our data set...at least in terms of columns.
+
+
 
 
 
