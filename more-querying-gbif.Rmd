@@ -6,7 +6,7 @@ output: pdf_document
 Your name here  
 Assignment 3  
 DSCI 245 / RNR 496B  
-Due: February 8th, 2022  
+Due: February 7th, 2022  
 
 
 ## More Querying GBIF Data
@@ -14,20 +14,21 @@ Due: February 8th, 2022
 
 ### Learning objectives:
 * Understand how to query GBIF data with spocc, using a variety of arguments.
-* Learn how to create a derivative data set with fewer columns and use some cleaning strategies.  
-* Learn how to combine data sets.  
-* Successfully create a csv file from a data set.  
-
-
+* Practice some data cleaning strategies.
+* Learn how to create a derivative data set with fewer columns.  
+* Successfully create a csv file from a data set. 
+  
+ 
 
 ### Querying data from GBIF with spocc  
 
-Picking up from last week, we're going to dive back into querying data from GBIF (Global Biodversity Information Facility) using the spocc (SPecies OCCurrence) R package. First, let's load the spocc package using the library() function:
+Picking up from last week, we're going to dive back into querying data from GBIF (Global Biodversity Information Facility) using the spocc (SPecies OCCurrence) R package. First, let's load the spocc and tidyverse packages using the library() function:
 
 
 ```{r}
 
 library("spocc")
+library("tidyverse")
 
 ```
 
@@ -106,19 +107,39 @@ You can contain gbifopts in an R "list". The syntax for using a list is:
 
 list(key1="value1", key2="value2")
 
-Below I'm refining the query for the Southern Black Widow to just those in Texas during the year 2020:
+Now I'm going to perform a search for the American goldfinch (Spinus tristis), and use gbifopts to limit it by the state of Oregon, and the year 2020. 
 
 ```{r}
 
-bwTx<-occ(query="Latrodectus mactans", from="gbif", gbifopts = list(stateProvince="Texas", year="2020"))
+goldfinchOr<-occ(query="Spinus tristis", from="gbif", gbifopts = list(stateProvince="Oregon", year="2020"), limit=34000)
 
-bwTx
+goldfinchOr
+
+```
+...and like before, we'll use View(), and then drill down to get the data:
+
+```{r}
+View(goldfinchOr)
+
+gfOrData<-goldfinchOr$gbif$data$Spinus_tristis
+
+gfOrData
+
+```
+```{r}
+
+gfOrData<-gfOrData %>%mutate(latitude = replace(latitude, latitude==45.559186, -45.559186))
+
+gfOrData
 
 ```
 
+
+
+
 YOUR TURN:
 
-Refine your bird query to just return occurrences in a country of your choosing, for the years 2020 and 2021 (hint: refer to occ_options('gbif') to determine how to query multiple years, and how to query by country):
+Refine your bird query to just return occurrences in a country of your choosing, for the years 2020 and 2021 (hint: refer to occ_options('gbif') to determine how to query multiple years, and how to query by country). Adjust your limit once you see the total.
 
 ```{r}
 
@@ -137,32 +158,6 @@ Refine your bird query to just return occurrences in a country of your choosing,
 
 
 
-```{r}
-# testing 
-#pinnated bittern
-#western meadowlark
-wml<-occ(query="Sturnella neglecta", gbifopts = list(year="2020", stateProvince="Oregon"), limit=12000, has_coords = TRUE)
-wml
-
-
-```
-
-```{r}
-#View(bittern)
-
-wmlData<-wml$gbif$data$Sturnella_neglecta
-
-wmlData
-
-#library(mapr)
-
-#map_leaflet(wmlData)
-
-```
-
-
-
-
 
 
 ### Analyzing/cleaning your data
@@ -170,16 +165,55 @@ wmlData
 Since humans are involved in recording and submitting the data, you can't necessarily assume it's all accurate. As such, we should probably write some scripts to "clean" the data.
 
 
+First we want to make sure that all the data represents "real" occurrences. There are two columns of importance here:
+
+occurrenceStatus - basically we're looking for the value "PRESENT". Sometimes the value is "ABSENT", if a researcher is doing periodic occurrence counts of a species. We want to remove these.
+
+individualCount - here we want to remove any rows where the value is 0.
+
+
+The strategy in both cases is to use the "unique()" function on each column. This will return all unique values for the given column. If it appears there are rows to remove, then we use the "subset()" function to isolate those rows, and then remove them from the data set.
+
+Let's start with occurrenceStatus:
 
 
 ```{r}
 
-unique(wmlData$occurrenceStatus)
+unique(gfOrData$occurrenceStatus)
 
-unique(wmlData$individualCount)
 
-to_remove<-subset(wmlData, individualCount==31)
-to_remove
+
+```
+
+If any values in the returned list were other than "PRESENT", here are the steps we would take to remove the rows:
+
+```{r}
+
+# Here we use the subset function to get rows from the original data set based on a condition we specify
+absent<-subset(x=gfOrData, occurrenceStatus !="PRESENT")
+
+absent
+
+
+# Now we use "anti_join" to redefine our data set by subtracting the "absent" rows from it.
+gfOrData<-anti_join(gfOrData, absent)
+
+gfOrData
+
+```
+
+
+
+YOUR TURN:
+
+Check your bird data for unique values of the occurrenceStatus column. Remove any rows that don't contain the value "PRESENT".
+
+
+```{r}
+
+
+
+
 
 
 
@@ -187,25 +221,167 @@ to_remove
 
 
 
-geo checking, 
-taxonomy can get wonky
-exclude w/in North America
-dates!
+Now let's do the same thing for the individualCount column. In this case we're looking for rows with 0:
 
-Looking at the output of the data, it's safe to say that there are many columns that we simply don't need. While they don't hurt anything, it might be easier to work with if we can pare down the size of our data set...at least in terms of columns.
+```{r}
+unique(gfOrData$individualCount)
+
+zeroFinches<-subset(x=gfOrData, individualCount==0)
+
+gfOrData<-anti_join(gfOrData, zeroFinches)
+
+gfOrData
+
+```
+
+
+YOUR TURN:
+
+Check your bird data for any rows in which individualCount is 0, and remove them:
+
+```{r}
 
 
 
----sample & exercise picking columns for new data set
+
+
+
+```
+
+
+
+Now we're going to check for any errors in coordinate data, and clean them up. It's not uncommon for coordinates to be off because of an erroneous "-" (either present or absent).
+
+
+It's not a bad idea to first eyeball the coordinate data by looking at the points plotted on a map. With the goldfinch data, we expect all the coordinates to be in Oregon. Are they?
+
+```{r}
+
+#Don't worry too much about this code. We'll learn ggplot later in the term. 
+# For now, just know that this creates a map, with gfOrData using the longitude and latitude columns.
+
+#plot data to get an overview
+wm <- borders("world", colour="gray50", fill="gray50")
+ggplot()+ coord_fixed()+ wm +
+  geom_point(data = gfOrData, aes(x = longitude, y = latitude),
+             colour = "darkred", size = 1.0)+
+  theme_bw()
+
+
+```
+
+
+So the strategy here would be to:
+* fix any rows that simply have errors with "-" signs
+* delete any rows with coordinates that are clearly way off
+
+In both cases, it might be a good idea to use the "sort" function on latitude and longitude to look for outliers:
+
+```{r}
+# The [1:20] at the end means "just print the first 20 rows"
+sort(gfOrData$latitude)[1:20]
+
+# now in reverse order
+sort(gfOrData$latitude, decreasing = TRUE)[1:20]
+
+# can do same for longitude
+
+```
+
+
+
+To edit the value of a cell, one would use code that looks like this:
+
+
+
+```{r}
+
+# here we're finding a cell value of latitude with an erroneous "-", and replacing it with the "-" omitted
+
+gfOrData<-gfOrData %>% mutate(latitude = replace(latitude, latitude==-45.559186, 45.559186))
+
+```
+
+
+To remove any bad data, we would use a similar strategy as with occurrenceStatus and individualCount:
+* use subset() to target rows with bad data
+* use anti_join() to remove them from the data set
+
+
+YOUR TURN:
+
+Plug your bird data into the map code below, and run it. Do you see any outliers that don't fit? If so, describe what you find with comments in the code chunk, and write some code to address the issues:
+
+```{r}
+
+# Replace YOURDATAHERE with your data set variable
+wm <- borders("world", colour="gray50", fill="gray50")
+ggplot()+ coord_fixed()+ wm +
+  geom_point(data = YOURDATAHERE, aes(x = longitude, y = latitude),
+             colour = "darkred", size = 1.0)+
+  theme_bw()
+
+
+
+#How does it look? Add some comments to describe. If necessary, write some code to fix the issues.
+
+
+
+```
+
+
+Other things to check:
+* Are they all the correct species?
+* Are the dates accurate/within the range you query?
+
+
+### Reducing and saving your data
+
+Data queried from GBIF has 100 columns, which is probably a little much. In order to more easily work with the data and cut down on processing time, we can eliminate many columns, and then save to a file.
+
+We can use the select() function to identify columns we want to keep:
+
+
+```{r}
+
+# with select(), we first identify the original data set, then identify a list of columns using the c() function
+
+lessData<-select(gfOrData, c(name, longitude, latitude, scientificName, year, month, day, eventDate, individualCount))
+
+lessData
+
+```
+
+
+Now we can write this to a csv file, which will appear in the Files tab.
+
+```{r}
+write_csv(lessData, "goldfinch.csv")
+```
 
 
 
 
-### Save as CSV
 
-### Integrate CSV (date, georef (format/validity), taxonomy)
+YOUR TURN:
 
-super-milkweed-data (same species, mult sources)
+Examine your bird data set, and identify the columns that might be useful. Use select() to make a data set with those columns, and write it to a csv:
+
+```{r}
+
+
+
+
+
+```
+
+
+
+To turn in by midnight on Monday, February 7th:
+
+Knit this document to a PDF, and load it to the Assignment 3 folder in Google Docs (check syllabus for URL).
+
+
 
 
 
