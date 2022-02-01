@@ -22,7 +22,7 @@ Due: February 7th, 2022
 
 ### Querying data from GBIF with spocc  
 
-Picking up from last week, we're going to dive back into querying data from GBIF (Global Biodversity Information Facility) using the spocc (SPecies OCCurrence) R package. First, let's load the spocc and tidyverse packages using the library() function:
+Picking up from last week, we're going to dive back into querying data from GBIF (Global Biodiversity Information Facility) using the spocc (SPecies OCCurrence) R package. First, let's load the spocc and tidyverse packages using the library() function:
 
 
 ```{r}
@@ -33,7 +33,7 @@ library("tidyverse")
 ```
 
 
-Now, let's revisit the "occ()" function. The documenation for this function is available here:
+Now, let's revisit the "occ()" function. The documentation for this function is available here:
 
 https://docs.ropensci.org/spocc/reference/occ.html
 
@@ -126,13 +126,7 @@ gfOrData<-goldfinchOr$gbif$data$Spinus_tristis
 gfOrData
 
 ```
-```{r}
 
-gfOrData<-gfOrData %>%mutate(latitude = replace(latitude, latitude==45.559186, -45.559186))
-
-gfOrData
-
-```
 
 
 
@@ -254,6 +248,18 @@ Now we're going to check for any errors in coordinate data, and clean them up. I
 
 
 It's not a bad idea to first eyeball the coordinate data by looking at the points plotted on a map. With the goldfinch data, we expect all the coordinates to be in Oregon. Are they?
+
+(First, this code will create a pretend error in the data, so you'll see what to look for)
+
+```{r}
+
+gfOrData<-gfOrData %>%mutate(latitude = replace(latitude, latitude==45.559186, -45.559186))
+
+
+```
+
+
+
 
 ```{r}
 
