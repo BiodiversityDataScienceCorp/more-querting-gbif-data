@@ -14,9 +14,9 @@ Due: February 8th, 2022
 
 ### Learning objectives:
 * Understand how to query GBIF data with spocc, using a variety of arguments.
-* Learn how to create a derivative data set with fewer columns.  
+* Learn how to create a derivative data set with fewer columns and use some cleaning strategies.  
 * Learn how to combine data sets.  
-* Succesfully create a csv file from a data set.  
+* Successfully create a csv file from a data set.  
 
 
 
@@ -40,7 +40,9 @@ Let's start by revisiting how to run a basic query to get species occurrences fr
 
 ```{r}
 
-blackWidows<-occ(query='Latrodectus mactans', from="gbif", limit=1000)
+#Note the default limit is 500, so run your query once, view the total, and then adjust your limit so it exceeds the max, and run again.
+
+blackWidows<-occ(query='Latrodectus mactans', from="gbif", limit=4000)
 
 blackWidows
 
@@ -68,9 +70,10 @@ bwData
 
 YOUR TURN:
 
-* Query GBIF using the occ() function for 1000 Monarch butterflies (Danaus plexippus). 
+* Pick a bird from the Internet Bird Collection: https://search.macaulaylibrary.org/catalog?sort=rating_rank_desc&collection=COLL58&cap=all&includeUnconfirmed=T
+* Use the species name to query GBIF using the occ() function. 
 * Use the View() function to see the object hierarchy.
-* Create a variable to target the dataset from the object, and print it to the screen.
+* Create a variable to target the data set from the object, and print it to the screen.
 
 
 ```{r}
@@ -115,7 +118,7 @@ bwTx
 
 YOUR TURN:
 
-Refine your query to just return Monarch butterflies from Arizona in the years 2020 and 2021 (hint: refer to occ_options('gbif') to determine how to query multiple years):
+Refine your bird query to just return occurrences in a country of your choosing, for the years 2020 and 2021 (hint: refer to occ_options('gbif') to determine how to query multiple years, and how to query by country):
 
 ```{r}
 
@@ -134,12 +137,75 @@ Refine your query to just return Monarch butterflies from Arizona in the years 2
 
 
 
-### Analyzing your data
+```{r}
+# testing 
+#pinnated bittern
+#western meadowlark
+wml<-occ(query="Sturnella neglecta", gbifopts = list(year="2020", stateProvince="Oregon"), limit=12000, has_coords = TRUE)
+wml
 
+
+```
+
+```{r}
+#View(bittern)
+
+wmlData<-wml$gbif$data$Sturnella_neglecta
+
+wmlData
+
+#library(mapr)
+
+#map_leaflet(wmlData)
+
+```
+
+
+
+
+
+
+### Analyzing/cleaning your data
+
+Since humans are involved in recording and submitting the data, you can't necessarily assume it's all accurate. As such, we should probably write some scripts to "clean" the data.
+
+
+
+
+```{r}
+
+unique(wmlData$occurrenceStatus)
+
+unique(wmlData$individualCount)
+
+to_remove<-subset(wmlData, individualCount==31)
+to_remove
+
+
+
+```
+
+
+
+geo checking, 
+taxonomy can get wonky
+exclude w/in North America
+dates!
 
 Looking at the output of the data, it's safe to say that there are many columns that we simply don't need. While they don't hurt anything, it might be easier to work with if we can pare down the size of our data set...at least in terms of columns.
 
 
+
+---sample & exercise picking columns for new data set
+
+
+
+
+### Save as CSV
+
+### Integrate CSV (date, georef (format/validity), taxonomy)
+
+super-milkweed-data (same species, mult sources)
 
 
 
